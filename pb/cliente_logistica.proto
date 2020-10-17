@@ -23,3 +23,31 @@ message Seguimiento{
 message Estado{
 	string estado = 1;
 }
+
+service CamionesService{
+    rpc CambiarEstado (Informacion) returns (Empty) {}
+    rpc SolicitarPaquete (Tipo) returns (Paquete) {}
+
+}
+
+message Empty{
+
+}
+
+message Informacion {
+    int32 id_paquete = 1;
+    string estado = 2;
+    int32 intentos = 3;
+}
+
+message Tipo {
+    string tipo = 1;
+}
+
+message Paquete{
+    int32 id_paquete = 1;
+    string tipo = 2;
+    int32 valor = 3;
+    string origen = 4;
+    string destino = 5;
+}
