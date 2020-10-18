@@ -11,6 +11,8 @@ import (
 	"sync"
 	"os"
 	"encoding/csv"
+	"github.com/streadway/amqp"
+	"encoding/json"
 )
 
 
@@ -55,7 +57,26 @@ type Paquete struct {
 	estado string
 }
 
+type PaqueteFinanzas struct{
+	idpaquete int32
+	estado string
+	intentos int32
+	valor int32
+	tipo string
+}
+
+type PaqueteJson struct{
+	Idpaquete int32 `json: "Idpaquete"`
+	Estado string `json: "Estado"`
+	Intentos int32 `json: "Intentos"`
+	Valor int32 `json: "Valor"`
+	Tipo string `json: "Tipo"`
+}
+
 var mux sync.Mutex
+var mux2 sync.Mutex
+
+var cola_finanzas []PaqueteFinanzas
 
 var ordenes map[int32]Paquete = make( map[int32]Paquete)
 
@@ -67,6 +88,64 @@ var cola_normal []int32
 
 var codigo_seguimiento int32 = 0
 var id_paquete int32 = 0
+
+
+func failOnError(err error, msg string) {
+	if err != nil {
+		log.Fatalf("%s: %s", msg, err)
+	}
+}
+
+func enviar_finanzas(){
+	mux2.Lock()
+	conn, err := amqp.Dial("amqp://test:test@10.6.40.145:5672/")
+	failOnError(err, "Failed to connect to RabbitMQ")
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	q, err := ch.QueueDeclare(
+		"cola", // name
+		false,   // durable
+		false,   // delete when unused
+		false,   // exclusive
+		false,   // no-wait
+		nil,     // arguments
+	)
+	failOnError(err, "Failed to declare a queue")
+
+	for{
+		if len(cola_finanzas) > 0 {
+			paquete := cola_finanzas[0]
+			cola_finanzas = cola_finanzas[1:]
+
+			log.Printf("Envie a finazas el paquete %d", paquete.idpaquete)
+
+			body, err := json.Marshal(PaqueteJson{
+				Idpaquete: paquete.idpaquete,
+				Estado: paquete.estado,
+				Intentos: paquete.intentos,
+				Valor: paquete.valor, 
+				Tipo: paquete.tipo})
+			if err != nil {
+				log.Fatalf("No se puede convertir en JSON: %v", err)
+			}
+			err = ch.Publish(
+				"",     // exchange
+				q.Name, // routing key
+				false,  // mandatory
+				false,  // immediate
+				amqp.Publishing{
+					ContentType: "aplication/json",
+					Body: body,
+				})
+		}
+	}
+	mux2.Unlock()
+}
+
 
 func TimeStamp () string {
 	tiempo := time.Now()
@@ -207,6 +286,13 @@ func (s *ServerCamiones)  CambiarEstado (ctx context.Context, informacion *pb.In
 	ordenes[informacion.Id] = orden
 	// NUMERO DE INTENTOS AQUI
 
+	cola_finanzas = append(cola_finanzas, PaqueteFinanzas{
+		idpaquete: orden.idpaquete,
+		estado: orden.estado,
+		intentos: informacion.Intentos,
+		valor: orden.valor, 
+		tipo: orden.tipo})
+
 	return &pb.Empty{}, nil
 
 }
@@ -327,6 +413,7 @@ func main(){
 	csvWriter.Flush()
 	file.Close()
 
+	go enviar_finanzas()
 	go ServerClientes()
 	ServerCamionesInicio()
 }
