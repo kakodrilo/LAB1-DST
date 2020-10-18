@@ -35,7 +35,7 @@ message Empty{
 }
 
 message Informacion {
-    int32 id_paquete = 1;
+    int32 id = 1;
     string estado = 2;
     int32 intentos = 3;
 }
@@ -45,7 +45,7 @@ message Tipo {
 }
 
 message Paquete{
-    int32 id_paquete = 1;
+    int32 id = 1;
     string tipo = 2;
     int32 valor = 3;
     string origen = 4;
