@@ -5,8 +5,8 @@ import (
 	pb "github.com/kakodrilo/LAB1-DST/pb"
 	"math/rand"
 	"fmt"
-	//"os"
-	//"encoding/csv"
+	"os"
+	"encoding/csv"
 	"google.golang.org/grpc"
 	"time"
 	"context"
@@ -47,6 +47,20 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 
 	tipo_pb := &pb.Tipo{Tipo: tipo_camion}
 
+	file, err := os.OpenFile("camion"+fmt.Sprint(id_camion)+".csv", os.O_CREATE|os.O_WRONLY, 0777)
+	defer file.Close()
+
+	if err != nil {
+        os.Exit(1)
+	}
+
+	x := []string{"id-paquete", "tipo", "valor","origen","destino","intentos","fecha-entrega"}
+	var y []string
+	csvWriter := csv.NewWriter(file)
+    strWrite := [][]string{x}
+    csvWriter.WriteAll(strWrite)
+	csvWriter.Flush()
+
 	for {
 
 		for{
@@ -61,8 +75,8 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 				intentos_max := int32(3)
 
 				if res.Tipo != "retail" {
-					aux := res.Valor / int32(10)
-					if aux < 3 {
+					aux := (res.Valor + int32(10)) / int32(10)
+					if aux < 3{
 						intentos_max = aux
 					}
 				}
@@ -101,8 +115,8 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 				intentos_max := int32(3)
 
 				if res.Tipo != "retail" {
-					aux := res.Valor / int32(10)
-					if aux < 3 {
+					aux := (res.Valor + int32(10)) / int32(10)
+					if aux < 3{
 						intentos_max = aux
 					}
 				}
@@ -121,8 +135,8 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 			intentos_max := int32(3)
 
 			if res.Tipo != "retail" {
-				aux := res.Valor / int32(10)
-				if aux < 3 {
+				aux := (res.Valor + int32(10)) / int32(10)
+				if aux < 3{
 					intentos_max = aux
 				}
 			}
@@ -230,7 +244,14 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 				}
 			}
 
+			x = []string{fmt.Sprint(paquetes[0].id), paquetes[0].tipo, fmt.Sprint(paquetes[0].valor),paquetes[0].origen,paquetes[0].destino,fmt.Sprint(paquetes[0].intentos),paquetes[0].fecha_entrega}
+			y = []string{fmt.Sprint(paquetes[1].id), paquetes[1].tipo, fmt.Sprint(paquetes[1].valor),paquetes[1].origen,paquetes[1].destino,fmt.Sprint(paquetes[1].intentos),paquetes[1].fecha_entrega}
+			strWrite = [][]string{x,y}
+			csvWriter.WriteAll(strWrite)
+			csvWriter.Flush()
+
 			paquetes = paquetes[:0]
+
 		}else {
 			log.Printf("Camion %d tiene el paquete %d \n", id_camion, paquetes[0].id)
 			for {
@@ -271,8 +292,12 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 					log.Fatalf("No se pueden solocitar paquetes: %v", err)
 				}
 			}
-			paquetes = paquetes[:0]
 
+			x = []string{fmt.Sprint(paquetes[0].id), paquetes[0].tipo, fmt.Sprint(paquetes[0].valor),paquetes[0].origen,paquetes[0].destino,fmt.Sprint(paquetes[0].intentos),paquetes[0].fecha_entrega}
+			strWrite = [][]string{x}
+			csvWriter.WriteAll(strWrite)
+			csvWriter.Flush()
+			paquetes = paquetes[:0]
 
 		}
 	}
@@ -280,6 +305,7 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 }
 
 func main(){
+
 
 	fmt.Println("Ingrese tiempo de espera (en segundos): ")
 	var tiempo_espera int32

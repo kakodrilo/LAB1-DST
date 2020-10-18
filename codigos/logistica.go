@@ -9,6 +9,8 @@ import (
 	"time"
 	"fmt"
 	"sync"
+	"os"
+	"encoding/csv"
 )
 
 
@@ -76,6 +78,14 @@ func (s *Server)  IngresarOrden (ctx context.Context, orden *pb.Orden) (*pb.Segu
 
 	id_paquete++
 
+	file, err := os.OpenFile("logistica.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
+	defer file.Close()
+
+	if err != nil {
+		os.Exit(1)
+	}
+
+
 	if orden.Prioritario == 2{	
 		seguimiento := &pb.Seguimiento{
 			Seguimiento: 0}
@@ -93,6 +103,11 @@ func (s *Server)  IngresarOrden (ctx context.Context, orden *pb.Orden) (*pb.Segu
 			seguimiento: 0,
 			estado: "En Bodega"}
 		
+		x := []string{ordenes[id_paquete].timestamp, fmt.Sprint(ordenes[id_paquete].idpaquete), ordenes[id_paquete].tipo,ordenes[id_paquete].nombre,fmt.Sprint(ordenes[id_paquete].valor),ordenes[id_paquete].origen,ordenes[id_paquete].destino,fmt.Sprint(ordenes[id_paquete].seguimiento)}
+		csvWriter := csv.NewWriter(file)
+		strWrite := [][]string{x}
+		csvWriter.WriteAll(strWrite)
+		csvWriter.Flush()
 
 		return seguimiento, nil
 	}else {
@@ -131,6 +146,13 @@ func (s *Server)  IngresarOrden (ctx context.Context, orden *pb.Orden) (*pb.Segu
 				seguimiento: codigo_seguimiento,
 				estado: "En Bodega"}
 			}
+		
+		
+		x := []string{ordenes[id_paquete].timestamp, fmt.Sprint(ordenes[id_paquete].idpaquete), ordenes[id_paquete].tipo,ordenes[id_paquete].nombre,fmt.Sprint(ordenes[id_paquete].valor),ordenes[id_paquete].origen,ordenes[id_paquete].destino,fmt.Sprint(ordenes[id_paquete].seguimiento)}
+		csvWriter := csv.NewWriter(file)
+		strWrite := [][]string{x}
+		csvWriter.WriteAll(strWrite)
+		csvWriter.Flush()
 
 		return seguimiento, nil
 		
@@ -153,6 +175,10 @@ func (s *Server)  ConsultarEstado (ctx context.Context, seguimiento *pb.Seguimie
 }
 
 func ServerClientes(){
+
+	
+
+
 	lis, err := net.Listen("tcp", ":9000")
 	if err != nil {
 		log.Fatalf("No se pudo iniciar el server: %v", err)
@@ -285,6 +311,22 @@ func ServerCamionesInicio(){
 }
 
 func main(){
+
+	
+	file, err := os.OpenFile("logistica.csv", os.O_CREATE|os.O_WRONLY, 0777)
+	defer file.Close()
+
+	if err != nil {
+        os.Exit(1)
+	}
+
+	x := []string{"timestamp", "id-paquete", "tipo","nombre","valor","origen","destino","seguimiento"}
+    csvWriter := csv.NewWriter(file)
+    strWrite := [][]string{x}
+    csvWriter.WriteAll(strWrite)
+	csvWriter.Flush()
+	file.Close()
+
 	go ServerClientes()
 	ServerCamionesInicio()
 }
