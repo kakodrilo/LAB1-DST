@@ -137,8 +137,9 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 				fecha_entrega: "",
 				intentos_max: intentos_max})
 		}
-
+		
 		if len(paquetes) == 2 {
+			log.Printf("Camion %d tiene los paquetes %d y %d \n", id_camion, paquetes[0].id, paquetes[1].id)
 			if paquetes[0].valor < paquetes[1].valor {
 				aux := paquetes[0]
 				paquetes = paquetes[1:]
@@ -156,7 +157,10 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 					eleccion := r1.Int31n(5)
 
 					if eleccion < 4 {
+						log.Printf("Camion %d entrego  paquete %d \n", id_camion, paquetes[0].id)
 						paquetes[0].fecha_entrega = TimeStamp()
+					}else {
+						log.Printf("Camion %d intento entregar paquete %d en intento %d\n", id_camion, paquetes[0].id, paquetes[0].intentos+1)
 					}
 					paquetes[0].intentos++
 					
@@ -170,7 +174,10 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 					eleccion := r1.Int31n(5)
 
 					if eleccion < 4 {
+						log.Printf("Camion %d entrego  paquete %d \n", id_camion, paquetes[1].id)
 						paquetes[1].fecha_entrega = TimeStamp()
+					}else {
+						log.Printf("Camion %d intento entregar paquete %d en intento %d\n", id_camion, paquetes[1].id, paquetes[1].intentos+1)
 					}
 					paquetes[1].intentos++
 					
@@ -225,6 +232,7 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 
 			paquetes = paquetes[:0]
 		}else {
+			log.Printf("Camion %d tiene el paquete %d \n", id_camion, paquetes[0].id)
 			for {
 
 				if paquetes[0].intentos < paquetes[0].intentos_max && paquetes[0].fecha_entrega == ""{
@@ -233,7 +241,10 @@ func SolicitarPaquete (tipo_camion string, id_camion int32, tiempo_espera int32,
 					eleccion := r1.Int31n(5)
 
 					if eleccion < 4 {
+						log.Printf("Camion %d entrego  paquete %d \n", id_camion, paquetes[0].id)
 						paquetes[0].fecha_entrega = TimeStamp()
+					}else {
+						log.Printf("Camion %d intento entregar paquete %d en intento %d\n", id_camion, paquetes[0].id, paquetes[0].intentos+1)
 					}
 					paquetes[0].intentos++
 					

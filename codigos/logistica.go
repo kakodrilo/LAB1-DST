@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"time"
 	"fmt"
+	"sync"
 )
 
 
@@ -51,6 +52,8 @@ type Paquete struct {
 	seguimiento int32
 	estado string
 }
+
+var mux sync.Mutex
 
 var ordenes map[int32]Paquete = make( map[int32]Paquete)
 
@@ -183,7 +186,7 @@ func (s *ServerCamiones)  CambiarEstado (ctx context.Context, informacion *pb.In
 }
 
 func (s *ServerCamiones)  SolicitarPaquete (ctx context.Context, tipo *pb.Tipo) (*pb.Paquete, error){
-
+	mux.Lock()
 	if tipo.Tipo == "retail" {
 		if len(cola_retail) > 0 {
 			id := cola_retail[0]
@@ -191,22 +194,28 @@ func (s *ServerCamiones)  SolicitarPaquete (ctx context.Context, tipo *pb.Tipo) 
 
 			enviar := ordenes[id]
 
-			ordenes[id].estado = "En Camino"
+			log.Printf("Orden %d esta En Camino", id)
+			enviar.estado = "En Camino"
+			ordenes[id] = enviar
 
+			mux.Unlock()
 			return &pb.Paquete{
 				Id: enviar.idpaquete,
 				Tipo: enviar.tipo,
 				Valor: enviar.valor,
 				Origen: enviar.origen,
 				Destino: enviar.destino} , nil
-		}else if len(cola_prioritaria) > 0 {
+		}
+		if len(cola_prioritaria) > 0 {
 			id := cola_prioritaria[0]
 			cola_prioritaria = cola_prioritaria[1:]
 
 			enviar := ordenes[id]
+			log.Printf("Orden %d esta En Camino", id)
+			enviar.estado = "En Camino"
+			ordenes[id] = enviar
 
-			ordenes[id].estado = "En Camino"
-
+			mux.Unlock()
 			return &pb.Paquete{
 				Id: enviar.idpaquete,
 				Tipo: enviar.tipo,
@@ -214,17 +223,20 @@ func (s *ServerCamiones)  SolicitarPaquete (ctx context.Context, tipo *pb.Tipo) 
 				Origen: enviar.origen,
 				Destino: enviar.destino} , nil
 		} else {
+			mux.Unlock()
 			return &pb.Paquete{Id: -1}, nil
 		}
 	} else if tipo.Tipo == "normal" {
 		if len(cola_prioritaria) > 0 {
 			id := cola_prioritaria[0]
-			cola_retail = cola_prioritaria[1:]
+			cola_prioritaria = cola_prioritaria[1:]
 
 			enviar := ordenes[id]
+			log.Printf("Orden %d esta En Camino", id)
+			enviar.estado = "En Camino"
+			ordenes[id] = enviar
 
-			ordenes[id].estado = "En Camino"
-
+			mux.Unlock()
 			return &pb.Paquete{
 				Id: enviar.idpaquete,
 				Tipo: enviar.tipo,
@@ -233,12 +245,14 @@ func (s *ServerCamiones)  SolicitarPaquete (ctx context.Context, tipo *pb.Tipo) 
 				Destino: enviar.destino} , nil
 		}else if len(cola_normal) > 0 {
 			id := cola_normal[0]
-			cola_prioritaria = cola_normal[1:]
+			cola_normal = cola_normal[1:]
 
 			enviar := ordenes[id]
+			log.Printf("Orden %d esta En Camino", id)
+			enviar.estado = "En Camino"
+			ordenes[id] = enviar
 
-			ordenes[id].estado = "En Camino"
-
+			mux.Unlock()
 			return &pb.Paquete{
 				Id: enviar.idpaquete,
 				Tipo: enviar.tipo,
@@ -246,9 +260,11 @@ func (s *ServerCamiones)  SolicitarPaquete (ctx context.Context, tipo *pb.Tipo) 
 				Origen: enviar.origen,
 				Destino: enviar.destino} , nil
 		} else {
+			mux.Unlock()
 			return &pb.Paquete{Id: -1}, nil
 		}
 	}
+	mux.Unlock()
 	return &pb.Paquete{Id: -1}, nil
 }
 
@@ -269,6 +285,6 @@ func ServerCamionesInicio(){
 }
 
 func main(){
-	ServerClientes()
-	//ServerCamionesInicio()
+	go ServerClientes()
+	ServerCamionesInicio()
 }

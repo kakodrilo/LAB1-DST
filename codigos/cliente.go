@@ -56,7 +56,7 @@ func CargarDatos(archivo string) ([]Orden) {
 		
 		if len(linea) ==  6{
 
-			valorPrioridad, err :=  strconv.Atoi(linea[2])
+			valorPrioridad, err :=  strconv.Atoi(linea[5])
 			if err != nil {
 				log.Fatalln("No se puede leer el archivo %v: %v", archivo, err)
 			}
