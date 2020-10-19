@@ -103,13 +103,12 @@ func main() {
 			ganancia_global = ganancia_global + ganancia
 			perdida_global = perdida_global + perdida
 			total = total + (ganancia - perdida)
-
 			x := []string{fmt.Sprint(paquete.Idpaquete), paquete.Tipo,fmt.Sprint(paquete.Intentos),fmt.Sprint(paquete.Valor),paquete.Estado,fmt.Sprint(perdida),fmt.Sprint(ganancia)}
 			strWrite := [][]string{x}
 			csvWriter.WriteAll(strWrite)
 			csvWriter.Flush()
 
-			log.Printf("id: %d  intentos: %d   estado: %s    perdida: %d   ganancia: %d", paquete.Idpaquete, paquete.Intentos, paquete.Estado, perdida, int32(ganancia))
+			log.Printf("id: %d  intentos: %d   estado: %s    perdida: %f   ganancia: %f", paquete.Idpaquete, paquete.Intentos, paquete.Estado, perdida, ganancia)
 
 		}
 	}()
@@ -117,9 +116,9 @@ func main() {
 	signal.Notify(exit, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-exit
-		log.Printf("Ganacias Totales: %d", ganancia_global)
-		log.Printf("Perdidas Totales: %d", perdida_global)
-		log.Printf("Balance: %d", total)
+		log.Printf("Ganacias Totales: %f", ganancia_global)
+		log.Printf("Perdidas Totales: %f", perdida_global)
+		log.Printf("Balance: %f", total)
 
 		os.Exit(1)
 	}()

@@ -119,9 +119,12 @@ func EnviarOrdenes (ordenes []Orden, tiempo int) (error) {
 			if err != nil {
 				log.Fatalf("No se puede enviar la orden: %v", err)
 			}
-
-			log.Printf("Codigo de Seguimiento para %s : %d", orden_enviar.id, res.Seguimiento)
-
+			if res.Seguimiento != 0 {
+				log.Printf("Codigo de Seguimiento para %s : %d", orden_enviar.id, res.Seguimiento)
+			}else {
+				log.Printf("Se ha enviado la orden %s de retail", orden_enviar.id)
+			}
+			
 		}
 	}
 
@@ -163,19 +166,31 @@ func ConsultarEstado () (error){
 
 func main(){
 
-
-	fmt.Println("Seleccione accion:")
-	fmt.Println("[1] Enviar Ordenes       [2] Consultar Estado")
+	fmt.Println("Seleccione el tipo de cliente a emular:")
+	fmt.Println("[1] Pyme      [2] Retail")
+	
 	log.Printf("\nOpcion: ")
 	var opcion int
 	fmt.Scan(&opcion)
 
+	var ordenes []Orden 
+	var tiempo int
+
 	if opcion == 2 {
-		ConsultarEstado()
+		ordenes = CargarDatos("retail.csv")
+		fmt.Println("\nDatos correctamente cargados\n")
+		
+		log.Printf("Ingrese frecuencia de envio de ordenes (en segundos): ")
+		fmt.Scan(&tiempo)
+		log.Printf("Tiempo fijado en: %d [s].", tiempo)
+
+		EnviarOrdenes(ordenes, tiempo)
+		
 	} else if opcion == 1 {
 
-		fmt.Println("Seleccione el tipo de cliente a emular:")
-		fmt.Println("[1] Pyme      [2] Retail")
+		fmt.Println("Seleccione accion:")
+		fmt.Println("[1] Enviar Ordenes       [2] Consultar Estado")
+		
 		log.Printf("\nOpcion: ")
 
 		
@@ -183,21 +198,20 @@ func main(){
 
 		fmt.Println("-> Iniciando carga de ordenes <-")
 
-		var ordenes []Orden 
 		if opcion == 1{
 			ordenes = CargarDatos("pymes.csv")
+			fmt.Println("\nDatos correctamente cargados\n")
+		
+			log.Printf("Ingrese frecuencia de envio de ordenes (en segundos): ")
+			fmt.Scan(&tiempo)
+
+			log.Printf("Tiempo fijado en: %d [s].", tiempo)
+
+			EnviarOrdenes(ordenes, tiempo)
 		}else if opcion == 2{
-			ordenes = CargarDatos("retail.csv")
+			ConsultarEstado()
 		}
 
-		fmt.Println("\nDatos correctamente cargados\n")
 		
-		log.Printf("Ingrese frecuencia de envio de ordenes (en segundos): ")
-		var tiempo int
-		fmt.Scan(&tiempo)
-
-		log.Printf("Tiempo fijado en: %d [s].", tiempo)
-
-		EnviarOrdenes(ordenes, tiempo)
 	}
 }
