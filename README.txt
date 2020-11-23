@@ -51,6 +51,13 @@ Ejecución:
                 $ make
 
         --> Si se desea simular más de un cliente a la vez se debe abrir otra terminal y seguir los pasos 1 al 4.
+	--> Para poder simular los clientes de manera ordenada, decidimos darle una sola funcionalidad a cada cliente. 
+	    Entonces, primero se elige si se quiere simular tipo Pyme o Retail. Si se elige retail se ingresan los tiempos y automáticamente 
+            comienza a enviar mensajes hasta finalizar. Si se elige pyme, se puede escoger entre enviar paquetes o consultar por estados, 
+            si se elige el primero se preguntan por los tiempos y se empiezan a enviar los mensajes periódicamente hasta finalizar, y 
+            si se elige el segundo, se comienzan a pedir códigos de seguimiento para mostrar los estados. Por lo tanto, sugerimos abrir 
+            3 terminales, una que simule cada posible funcionalidad del cliente. Lo hicimos de esa manera para que la información mostrada en 
+            la terminal se viera más ordenada.
 
     + dist05 - Finanzas:
         1. Comprobar que el servidor RabbitMQ este corriendo con el comando:
